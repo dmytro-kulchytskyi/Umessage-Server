@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <file url="file://D:/Node" libraries="{msgVK/node_modules, node modules, node-DefinitelyTyped, node_redis-DefinitelyTyped}" />
+    <file url="file://$PROJECT_DIR$" libraries="{msgVK/node_modules, node modules, node-DefinitelyTyped, node_redis-DefinitelyTyped}" />
+    <file url="PROJECT" libraries="{msgVK/node_modules, node modules, node-DefinitelyTyped, node_redis-DefinitelyTyped}" />
+    <includedPredefinedLibrary name="Node.js Core" />
+  </component>
+</project>
