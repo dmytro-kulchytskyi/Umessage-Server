@@ -31,12 +31,12 @@ function getDialogs(token, requestParams, callback) {
     sendRequest(link, function (err, res) {
         if (err) {
             callback(err);
-            return log.error(err);
+            return callback(err);
         }
 
         //TODO parsing res to data
 
-        callback(null, res);
+        callback(undefined, res);
     });
 }
 
