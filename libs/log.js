@@ -10,7 +10,7 @@ var myFormat = printf(info => {
     return `${time} [${info.label}] ${info.level}: ${info.message}`;
 });
 
-module.exports = module => {
+module.exports = (module) => {
     var path = module.filename.split('\\').slice(-2).join('/');
 
     var logger = createLogger({

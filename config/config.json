@@ -1,6 +1,11 @@
 {
-  "port": 3000,
+  "appPort": 3000,
   "cluster": {
     "workerFileName": "worker.js"
+  },
+  "dataProviders": {
+    "vkProvider": {
+      "vkApiLink": "https://api.vk.com/method/"
+    }
   }
 }
