@@ -6,7 +6,7 @@
 <body>
 <ul id="msgs"></ul>
 <form action="">
-    <input id="m" />
+    <input id="m"/>
     <button>Send</button>
 </form>
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
@@ -22,6 +22,11 @@
     socket.on('message', function (msg) {
         $('#msgs').append($('<li>').text(msg));
     });
+
+    socket.on('conn', function (data) {
+        $(msgs).html('');
+        $('#msgs').append("<li><strong>" + data + "</strong></li>");
+    })
 </script>
 </body>
 </html>

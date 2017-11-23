@@ -1,6 +1,7 @@
 {
   "appPort": 80,
-  "cluster": {
-    "workerFileName": "worker.js"
+  "redis": {
+    "host":"127.0.0.1",
+    "port": 6379
   }
 }
