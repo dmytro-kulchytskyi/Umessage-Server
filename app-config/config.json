@@ -1,0 +1,6 @@
+{
+  "appPort": 80,
+  "cluster": {
+    "workerFileName": "worker.js"
+  }
+}

@@ -1,5 +1,5 @@
 var cluster = require('cluster');
-var config = require('config');
+var appConfig = require('app-config');
 var log = require('libs/log')(module);
 var os = require('os');
 var util = require('util');
@@ -7,18 +7,14 @@ var util = require('util');
 var workersCount = os.cpus().length;
 
 cluster.setupMaster({
-    exec: config.get('cluster:workerFileName')
+    exec: appConfig.get('cluster:workerFileName')
 });
 
-function createWorker() {
-    var worker = cluster.fork();
-    worker.once('exit', function (code, signal) {
-        log.error(util.format('Worker died:', worker.process.pid, code, signal));
-        createWorker(cluster.fork());
-    });
-
-    return worker;
-}
+cluster.on('exit', function (worker, code, signal) {
+    log.error(`Worker died: id:${worker.process.pid}, code:${code}, signal:${signal}`);
+    cluster.fork();
+});
 
 for (var i = 0; i < workersCount; i++)
-    createWorker();
+    cluster.fork();
+

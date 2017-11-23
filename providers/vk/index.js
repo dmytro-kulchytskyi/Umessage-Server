@@ -1,41 +1,64 @@
 var util = require('util');
 var https = require('https');
-var config = require('config');
+var config = require('./config');
 
-var Message = require('models/Message');
-var Dialog = require('models/Dialog');
+var log = require('libs/log')(module);
+var urlBuilder = require('libs/url-builder');
+var dataProvider = require('data-provider');
 
-var providerName = "vk";
+var Message = dataProvider.models.Message;
+var Dialog = dataProvider.models.Dialog;
+var User = dataProvider.models.User;
 
-var vkApiLinkPattern = config.get("dataProviders:vkProvider:vkApiLink");
+var providerName = config.get('name');
+var vkApiLink = config.get('apiLink');
+var vkApiVersion = config.get('apiVersion');
 
-function getDialogs(token, requestParams, callback) {
-    if (!token) return callback(new Error("token"));
+var getDialogsConfig = config.get('apiMethods:getDialogs');
+var getMessagesConfig = config.get('apiMethods:getMessages');
+var getUserInfoConfig = config.get('apiMethods:getUserInfo');
 
-    var link = vkApiLinkPattern + "messages.getDialogs&v=5.68&access_token=" + token;
+function getDialogs(params, callback) {
 
-    if (requestParams.offset) link += "&offset=" + offset;
-    if (requestParams.count) link += "&count=" + count;
-    if (requestParams.start_message_id) link += "&start_message_id=" + start_message_id;
-    if (requestParams.preview_length) link += "&preview_length=" + preview_length;
+    var reqParams = {
+        v: vkApiVersion,
+        access_token: params.token,
+        count: params.count,
+        start_message_id: params.startMessageId
+    };
+
+    for(var key in reqParams)
+        if(!reqParams[key]) throw new TypeError(`${key} field is required!`);
+
+
+    var link = urlBuilder(vkApiLink, getDialogsConfig.path, reqParams);
 
     sendRequest(link, (err, res) => {
         if (err) return callback(err);
 
-        //TODO parsing res to data
+        try {
+            var data = JSON.parse(res);
 
-        callback(undefined, res);
+            if (res.error) {
+                return callback(new Error(res.error.error_code + ' : ' + res.error.error_msg));
+            }
+
+
+            return callback(undefined, res);
+        }
+        catch (err) {
+            log.error(err);
+            callback(new Error("bad response"));
+        }
     });
 }
 
-function getMessages(token, dialog, requestParams, callback) {
-    if (!(dialog instanceof Dialog))
-        return callback(new TypeError("invalid type of dialog"));
+function getMessages(token, requestParams, callback) {
 
     if (!dialog.providers.contains(providerName))
         return callback(new TypeError("invalid provider"));
 
-    //TODO
+
 }
 
 function getUserInfo(userId, callback) {
@@ -44,26 +67,26 @@ function getUserInfo(userId, callback) {
 
 function sendRequest(link, callback) {
     var request = https.get(link, function (res) {
-        this.removeAllListeners();
         var body = "";
         res.on('data', function (d) {
             body += d;
         });
 
         res.on('end', function () {
-            callback(body);
+            callback(undefined, body);
         });
     });
 
-    request.on('error', function (e) {
-        this.removeAllListeners();
-        callback(null, e);
+    request.on('error', function (error) {
+        callback(error);
     });
 }
 
 module.exports = {
     providerName,
     getDialogs,
+    getMessages,
+    getUserInfo
 
 };
 
