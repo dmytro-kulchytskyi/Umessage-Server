@@ -15,12 +15,16 @@ io.adapter(redis({
     port: config.get('redis:port')
 }));
 
-if (sticky.listen(server, config.get('appPort'))) {
+io.set('transports', ['xhr-polling']);
 
+if (sticky.listen(server, config.get('appPort'))) {
     var dataProvider = require('data-provider');
     dataProvider.useProvider(require('providers/vk'));
 
+    log.info(`Process started: ${process.pid} [worker#${cluster.worker.id}]`);
+
     app.get('/', function (req, res) {
+        console.log('req');
         res.sendFile(__dirname + '/_test/socketsTest.html');
     });
 
