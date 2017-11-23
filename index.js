@@ -15,7 +15,7 @@ io.adapter(redis({
     port: config.get('redis:port')
 }));
 
-io.set('transports', ['xhr-polling']);
+io.set('transports', ['websocket']);
 
 if (sticky.listen(server, config.get('appPort'))) {
     var dataProvider = require('data-provider');
