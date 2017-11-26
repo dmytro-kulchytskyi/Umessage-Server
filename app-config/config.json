@@ -1,7 +1,27 @@
 {
   "appPort": 80,
   "redis": {
-    "host":"127.0.0.1",
+    "host": "127.0.0.1",
     "port": 6379
+  },
+  "data-provider": {
+    "providers": {
+      "vk": {
+        "name": "vk",
+        "apiVersion": "5.64",
+        "apiLink": "https://api.vk.com/",
+        "apiMethods": {
+          "getDialogs": {
+            "path": "method/messages.getDialogs"
+          },
+          "getMessages": {
+            "path": "method/messages.getHistory"
+          },
+          "getUserInfo": {
+            "path": "methods/users.get"
+          }
+        }
+      }
+    }
   }
 }

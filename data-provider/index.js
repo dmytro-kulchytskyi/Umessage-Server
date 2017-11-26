@@ -1,7 +1,9 @@
 var EventEmitter = require('events').EventEmitter;
 var async = require('async');
 var log = require('libs/log')(module);
-var models = require('./libs/models');
+
+var models = require('./models');
+var errors = require('./errors');
 
 var providers = [];
 
@@ -27,11 +29,11 @@ function getAvailableProviders() {
 
 function useProvider(provider) {
     providers.push(provider);
+    return exports;
 }
 
 module.exports = {
     useProvider,
     getAvailableProviders,
     getData,
-    models
 };

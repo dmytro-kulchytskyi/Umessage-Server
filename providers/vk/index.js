@@ -1,22 +1,19 @@
 var util = require('util');
 var https = require('https');
-var config = require('./config');
+var config = require('app-config');
 
 var log = require('libs/log')(module);
 var urlBuilder = require('libs/url-builder');
-var dataProvider = require('data-provider');
 
-var Message = dataProvider.models.Message;
-var Dialog = dataProvider.models.Dialog;
-var User = dataProvider.models.User;
+var models = require('data-provider/models');
+var errors = require('data-provider/errors');
 
-var providerName = config.get('name');
-var vkApiLink = config.get('apiLink');
-var vkApiVersion = config.get('apiVersion');
+var providerName = config.get('data-provider:providers:name');
 
-var getDialogsConfig = config.get('apiMethods:getDialogs');
-var getMessagesConfig = config.get('apiMethods:getMessages');
-var getUserInfoConfig = config.get('apiMethods:getUserInfo');
+var vkApiLink = config.get('data-provider:providers:apiLink');
+var vkApiVersion = config.get('data-provider:providers:apiVersion');
+
+var requestConfigs = config.get('data-provider:providers:apiMethods');
 
 function getDialogs(params, callback) {
 
@@ -27,11 +24,8 @@ function getDialogs(params, callback) {
         start_message_id: params.startMessageId
     };
 
-    for(var key in reqParams)
-        if(!reqParams[key]) throw new TypeError(`${key} field is required!`);
 
-
-    var link = urlBuilder(vkApiLink, getDialogsConfig.path, reqParams);
+    var link = urlBuilder(vkApiLink, requestConfigs.getDialogs.path, reqParams);
 
     sendRequest(link, (err, res) => {
         if (err) return callback(err);
@@ -39,9 +33,8 @@ function getDialogs(params, callback) {
         try {
             var data = JSON.parse(res);
 
-            if (res.error) {
+            if (res.error)
                 return callback(new Error(res.error.error_code + ' : ' + res.error.error_msg));
-            }
 
 
             return callback(undefined, res);
@@ -89,6 +82,5 @@ module.exports = {
     getUserInfo
 
 };
-
 
 

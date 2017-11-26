@@ -1,8 +1,8 @@
 {
-  "name": "umessage",
+  "name": "Umessage-Server",
   "version": "1.0.0",
-  "description": "multi social networks messanger",
-  "main": "index.js",
+  "description": "Multi social networks messanger server",
+  "main": "startup.js",
   "dependencies": {
     "async": "^2.5.0",
     "express": "^4.16.2",
@@ -16,6 +16,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "github.com/Prodigy3452 | prodigy@xaker.ru | vk.com/prodigy_pro",
   "license": "ISC"
 }
