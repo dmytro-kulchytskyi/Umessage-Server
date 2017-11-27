@@ -17,70 +17,69 @@ var lpServerConfig = config.get('data-provider:providers:vk:lpServerConfiguratio
 var lpServerUrlPattern = 'https://%s?act=a_check&wait=%s&mode=%s&version=%s&key=%s';
 
 var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestPath, {
-    lp_version: lpServerConfig.lpVersion,
-    need_pts: 1
+	lp_version: lpServerConfig.lpVersion,
+	need_pts: 1
 });
 
 function UpdatesListener(token, handler) {
-    if (handler)
-        this._handler = handler;
+	if (handler)
+		this._handler = handler;
 
-    this._token = token;
+	this._token = token;
 }
 
 UpdatesListener.prototype.setHandler = function (handler) {
-    this._handler = handler;
+	this._handler = handler;
 };
 
 UpdatesListener.prototype.dispose = function () {
-    this._listening = false;
+	this._listening = false;
 };
 
 UpdatesListener.prototype.isListening = function () {
-    return this._listening;
+	return this._listening;
 };
 
 UpdatesListener.prototype.listen = function (callback) {
-    if (!this._handler)
-        return callback(new errors.ArgumentError("No handler specified"));
+	if (!this._handler)
+		return callback(new errors.ArgumentError("No handler specified"));
 
-    var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestPath, {
-        v: vkApiVersion,
-        lp_version: lpServerConfig.lpVersion,
-        need_pts: 1,
-        access_token: this._token
-    });
+	var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestPath, {
+		v: vkApiVersion,
+		lp_version: lpServerConfig.lpVersion,
+		need_pts: 1,
+		access_token: this._token
+	});
 
-    var self = this;
-    
-    apiRequest(getLPServerUrl, function (err, res) {
-        if (err)
-            return callback(err);
 
-        var url = util.format(lpServerUrlPattern,
-            res.server,
-            lpServerConfig.wait,
-            lpServerConfig.mode,
-            lpServerConfig.lpVersion,
-            res.key
-        );
+	apiRequest(getLPServerUrl, (err, res) => {
+		if (err)
+			return callback(err);
 
-        setImmediate(listen, url, res.ts, res.pts , self);
+		var url = util.format(lpServerUrlPattern,
+			res.server,
+			lpServerConfig.wait,
+			lpServerConfig.mode,
+			lpServerConfig.lpVersion,
+			res.key
+		);
 
-        callback();
-    });
+		setImmediate(listen, url, res.ts, res.pts, this);
+
+		callback();
+	});
 };
 
 function listen(urlPattern, ts, pts, self) {
 
-    function makeReq() {
-        var url = urlPattern + '&ts=' + ts;
-        https.get(url, function (res) {
-            //TODO
-        }).on('error', function (e) {
-            //TODO
-        });
-    }
+	function makeReq() {
+		var url = urlPattern + '&ts=' + ts;
+		https.get(url, (res) => {
+			//TODO
+		}).on('error', function (e) {
+			//TODO
+		});
+	}
 }
 
 module.exports = UpdatesListener;

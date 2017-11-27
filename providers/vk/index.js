@@ -17,37 +17,36 @@ var vkApiVersion = config.get('data-provider:providers:vk:apiVersion');
 var requestConfigs = config.get('data-provider:providers:vk:apiMethods');
 
 function getDialogs(params, callback) {
+	var reqParams = {
+		v: vkApiVersion,
+		access_token: params.token,
+		count: params.count,
+		start_message_id: params.startMessageId
+	};
 
-    var reqParams = {
-        v: vkApiVersion,
-        access_token: params.token,
-        count: params.count,
-        start_message_id: params.startMessageId
-    };
+	var link = urlBuilder(vkApiLink, requestConfigs.getDialogs.path, reqParams);
 
+	apiRequest(link, (err, res) => {
+		if (err) return callback(err);
 
-    var link = urlBuilder(vkApiLink, requestConfigs.getDialogs.path, reqParams);
-
-    apiRequest(link, function (err, res)  {
-        if (err) return callback(err);
-
-       //TODO
-    });
+		//TODO
+	});
 }
 
 function getMessages(token, requestParams, callback) {
-
-    if (!dialog.providers.contains(providerName))
-        return callback(new TypeError("invalid provider"));
-
-
+	//TODO
 }
 
 function getUserInfo(userId, callback) {
-    //TODO
+	//TODO
 }
 
-
-
-
-
+module.exports = {
+	providerName,
+	methods: {
+		getDialogs,
+		getMessages,
+		getUserInfo
+	},
+	UpdatesListener: require('./UpdatesListener')
+};

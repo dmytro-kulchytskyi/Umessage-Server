@@ -2,7 +2,7 @@ var log = require('libs/log')(module);
 var cluster = require('cluster');
 
 if (cluster.isMaster) {
-    log.info('Process started: ' + process.pid + ' [Master]');
+    log.info(`Process started: ${ process.pid} [Master]`);
 
     var numCPUs = require('os').cpus().length;
 
@@ -16,7 +16,7 @@ if (cluster.isMaster) {
     }
 
     cluster.on('exit', function (worker, code, signal) {
-            log.info('worker ' + worker.id + '[process id: ' + worker.process.pid + '] died. Code: ' + code + ', Signal: ' + signal);
+            log.error(`Worker died: ${worker.process.pid} [Worker ${worker.id}] Code:${code}, Signal:${signal}`);
             createWorker();
         }
     );

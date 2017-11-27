@@ -7,35 +7,28 @@ var errors = require('./errors');
 
 var providers = [];
 
-function getData(data, callback) {
-    //TODO
-}
-
 function getDialogs(data, callback) {
-    //TODO
+	//TODO
 }
 
 function getMessages(data, callback) {
-    //TODO
+	//TODO
 }
 
 function getUserInfo(userId, provider, callback) {
-    //TODO
+	//TODO
 }
 
 function getAvailableProviders() {
-    return providers.map(function (it) {
-        return it.providerName;
-    });
+	return providers.map(it => it.providerName);
 }
 
 function useProvider(provider) {
-    providers.push(provider);
-    return module.exports;
+	providers.push(provider);
+	return module.exports;
 }
 
 module.exports = {
-    useProvider: useProvider,
-    getAvailableProviders: getAvailableProviders,
-    getData: getData
+	useProvider,
+	getAvailableProviders,
 };
