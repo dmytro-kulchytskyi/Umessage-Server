@@ -1,9 +1,5 @@
-var ArgumentError = require('./ArgumentError');
-var ProviderResponseError = require('./ProviderResponseError');
-var ProviderRequestError = require('./ProviderRequestError');
-
 module.exports = {
-  ArgumentError,
-    ProviderRequestError,
-  ProviderResponseError
+    ArgumentError: require('./ArgumentError'),
+    ProviderRequestError: require('./ProviderRequestError'),
+    ProviderResponseError: require('./ProviderResponseError')
 };

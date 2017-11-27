@@ -21,9 +21,13 @@
             "path": "methods/users.get"
           },
           "getLPServer": {
-            "path": "methods/messages.getLongPollServer",
-            "lpVersion": "2"
+            "path": "methods/messages.getLongPollServer"
           }
+        },
+        "lpServerConfiguration": {
+          "lpVersion": 2,
+          "mode": true,
+          "wait": 25
         }
       }
     }

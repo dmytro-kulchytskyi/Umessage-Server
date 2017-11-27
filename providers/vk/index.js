@@ -4,7 +4,7 @@ var config = require('app-config');
 
 var log = require('libs/log')(module);
 var urlBuilder = require('libs/url-builder');
-var apiRequest = require('libs/vkApiRequest');
+var apiRequest = require('./libs/vkApiRequest');
 
 var models = require('data-provider/models');
 var errors = require('data-provider/errors');
@@ -28,7 +28,7 @@ function getDialogs(params, callback) {
 
     var link = urlBuilder(vkApiLink, requestConfigs.getDialogs.path, reqParams);
 
-    apiRequest(link, (err, res) => {
+    apiRequest(link, function (err, res)  {
         if (err) return callback(err);
 
        //TODO

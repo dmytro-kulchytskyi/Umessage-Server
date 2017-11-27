@@ -1,19 +1,23 @@
 var https = require('https');
+var util = require('util');
 var config = require('app-config');
 var log = require('libs/log')(module);
-var apiRequest = require('../libs/vkApiRequest');
 var urlBuilder = require('libs/url-builder');
 
 var errors = require('data-provider/errors');
 
+var apiRequest = require('../libs/vkApiRequest');
+
 var vkApiLink = config.get('data-provider:providers:vk:apiLink');
 var vkApiVersion = config.get('data-provider:providers:vk:apiVersion');
 
-var getLPserverRequestConfig = config.get('data-provider:providers:vk:apiMethods:getLPServer');
+var getLPServerRequestPath = config.get('data-provider:providers:vk:apiMethods:getLPServer:path');
+var lpServerConfig = config.get('data-provider:providers:vk:lpServerConfiguration');
 
+var lpServerUrlPattern = 'https://%s?act=a_check&wait=%s&mode=%s&version=%s&key=%s';
 
-var getLPServerUrl = urlBuilder(vkApiLink, getLPserverRequestConfig.path, {
-    lp_version: getLPserverRequestConfig.lpVersion,
+var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestPath, {
+    lp_version: lpServerConfig.lpVersion,
     need_pts: 1
 });
 
@@ -37,26 +41,46 @@ UpdatesListener.prototype.isListening = function () {
 };
 
 UpdatesListener.prototype.listen = function (callback) {
+    if (!this._handler)
+        return callback(new errors.ArgumentError("No handler specified"));
 
-    var getLPServerUrl = urlBuilder(vkApiLink, getLPserverRequestConfig.path, {
+    var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestPath, {
         v: vkApiVersion,
-        lp_version: getLPserverRequestConfig.lpVersion,
+        lp_version: lpServerConfig.lpVersion,
         need_pts: 1,
         access_token: this._token
     });
 
+    var self = this;
+    
     apiRequest(getLPServerUrl, function (err, res) {
-        if(err)
+        if (err)
             return callback(err);
 
-            
+        var url = util.format(lpServerUrlPattern,
+            res.server,
+            lpServerConfig.wait,
+            lpServerConfig.mode,
+            lpServerConfig.lpVersion,
+            res.key
+        );
 
-    })
+        setImmediate(listen, url, res.ts, res.pts , self);
+
+        callback();
+    });
 };
 
-function lisnet(lpServerUrl, handler) {
+function listen(urlPattern, ts, pts, self) {
 
+    function makeReq() {
+        var url = urlPattern + '&ts=' + ts;
+        https.get(url, function (res) {
+            //TODO
+        }).on('error', function (e) {
+            //TODO
+        });
+    }
 }
-
 
 module.exports = UpdatesListener;

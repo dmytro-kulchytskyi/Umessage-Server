@@ -19,26 +19,19 @@ var io = require('socket.io')(server);
 io.set('transports', ['websocket']);
 
 app.get('/', function (req, res) {
-    console.log('req');
     res.sendFile(__dirname + '/_test/socketsTest.html');
 });
 
 io.on('connection', function (client) {
-
-    var i = 0;
-    lpEmitation(function () {
-       client.emit('message', 'hi ' + i++)
-    });
-
     log.debug('client connected to worker #' + cluster.worker.id);
     client.emit('conn', 'connected to ' + cluster.worker.id);
 
     client.on('message', function (data) {
         log.debug('MSG: ' + data);
-        io.emit('message', `${data} [From worker ${cluster.worker.id}]`);
+        io.emit('message', data + ' [From worker ' + cluster.worker.id + ']');
     });
 });
 
 server.listen(config.get('appPort'), function () {
-    log.info(`Process started: ${process.pid} [Worker ${cluster.worker.id}]`);
+    log.info('Process started:' + process.pid + ' [Worker ' + cluster.worker.id + ']');
 });

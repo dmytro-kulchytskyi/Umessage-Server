@@ -1,16 +1,23 @@
-const {createLogger, transports, format: {json, combine, timestamp, label, printf}} = require('winston');
+var winston = require('winston');
+
+var createLogger = winston.createLogger;
+var transports = winston.transports;
+var format = winston.format;
+
+var json = format.json;
+var combine = format.combine;
+var timestamp = format.timestamp;
+var label = format.label;
+var printf = format.printf;
 
 var env = process.env.NODE_ENV;
 
-var myFormat = printf(info => {
-    var dateTime = info.timestamp.split('T');
-    dateTime[1] = dateTime[1].split('.')[0];
-
-    var time = dateTime.join(' ');
-    return `${time} [${info.label}] ${info.level}: ${info.message}`;
+var myFormat = printf(function (info) {
+    var time = info.timestamp.toString().replace('T', ' ').replace(/\.(\d)+Z/g, '');
+    return time + ' [' + info.label + ']' + info.level + ': ' + info.message;
 });
 
-module.exports = (module) => {
+module.exports = function (module) {
     var path = module.filename.split('\\').slice(-2).join('/');
 
     var logger = createLogger({
@@ -22,7 +29,7 @@ module.exports = (module) => {
         transports: [
             new transports.File({filename: 'logs/error.log', level: 'error'}),
             new transports.File({filename: 'logs/info.log', level: 'info'}),
-            new transports.File({filename: 'logs/debug.log', level: 'debug'}),
+            new transports.File({filename: 'logs/debug.log', level: 'debug'})
         ]
     });
 

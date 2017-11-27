@@ -19,21 +19,23 @@ function getMessages(data, callback) {
     //TODO
 }
 
-function  getUserInfo(userId, provider, callback) {
+function getUserInfo(userId, provider, callback) {
     //TODO
 }
 
 function getAvailableProviders() {
-    return providers.map(it => it.providerName);
+    return providers.map(function (it) {
+        return it.providerName;
+    });
 }
 
 function useProvider(provider) {
     providers.push(provider);
-    return exports;
+    return module.exports;
 }
 
 module.exports = {
-    useProvider,
-    getAvailableProviders,
-    getData,
+    useProvider: useProvider,
+    getAvailableProviders: getAvailableProviders,
+    getData: getData
 };
