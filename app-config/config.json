@@ -8,7 +8,7 @@
     "providers": {
       "vk": {
         "name": "vk",
-        "apiVersion": "5.64",
+        "apiVersion": "5.69",
         "apiLink": "https://api.vk.com/",
         "apiMethods": {
           "getDialogs": {
@@ -19,6 +19,10 @@
           },
           "getUserInfo": {
             "path": "methods/users.get"
+          },
+          "getLPServer": {
+            "path": "methods/messages.getLongPollServer",
+            "lpVersion": "2"
           }
         }
       }

@@ -24,6 +24,12 @@ app.get('/', function (req, res) {
 });
 
 io.on('connection', function (client) {
+
+    var i = 0;
+    lpEmitation(function () {
+       client.emit('message', 'hi ' + i++)
+    });
+
     log.debug('client connected to worker #' + cluster.worker.id);
     client.emit('conn', 'connected to ' + cluster.worker.id);
 

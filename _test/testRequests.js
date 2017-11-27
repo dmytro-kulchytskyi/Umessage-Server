@@ -1,3 +1,8 @@
-var errors = require('data-provider').errors;
-
-throw new errors.ProviderResponseError(0, 'dimas');
+function f() {
+    try {
+        throw 1;
+    } catch (e) {
+        return;
+    }
+    console.log('1231');
+}

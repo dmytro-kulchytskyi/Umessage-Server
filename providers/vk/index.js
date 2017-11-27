@@ -4,16 +4,17 @@ var config = require('app-config');
 
 var log = require('libs/log')(module);
 var urlBuilder = require('libs/url-builder');
+var apiRequest = require('libs/vkApiRequest');
 
 var models = require('data-provider/models');
 var errors = require('data-provider/errors');
 
-var providerName = config.get('data-provider:providers:name');
+var providerName = config.get('data-provider:providers:vk:name');
 
-var vkApiLink = config.get('data-provider:providers:apiLink');
-var vkApiVersion = config.get('data-provider:providers:apiVersion');
+var vkApiLink = config.get('data-provider:providers:vk:apiLink');
+var vkApiVersion = config.get('data-provider:providers:vk:apiVersion');
 
-var requestConfigs = config.get('data-provider:providers:apiMethods');
+var requestConfigs = config.get('data-provider:providers:vk:apiMethods');
 
 function getDialogs(params, callback) {
 
@@ -27,22 +28,10 @@ function getDialogs(params, callback) {
 
     var link = urlBuilder(vkApiLink, requestConfigs.getDialogs.path, reqParams);
 
-    sendRequest(link, (err, res) => {
+    apiRequest(link, (err, res) => {
         if (err) return callback(err);
 
-        try {
-            var data = JSON.parse(res);
-
-            if (res.error)
-                return callback(new Error(res.error.error_code + ' : ' + res.error.error_msg));
-
-
-            return callback(undefined, res);
-        }
-        catch (err) {
-            log.error(err);
-            callback(new Error("bad response"));
-        }
+       //TODO
     });
 }
 
@@ -58,29 +47,7 @@ function getUserInfo(userId, callback) {
     //TODO
 }
 
-function sendRequest(link, callback) {
-    var request = https.get(link, function (res) {
-        var body = "";
-        res.on('data', function (d) {
-            body += d;
-        });
 
-        res.on('end', function () {
-            callback(undefined, body);
-        });
-    });
 
-    request.on('error', function (error) {
-        callback(error);
-    });
-}
-
-module.exports = {
-    providerName,
-    getDialogs,
-    getMessages,
-    getUserInfo
-
-};
 
 
