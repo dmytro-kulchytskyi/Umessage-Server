@@ -16,11 +16,6 @@ var lpServerConfig = config.get('data-provider:providers:vk:lpServerConfiguratio
 
 var lpServerUrlPattern = 'https://%s?act=a_check&wait=%s&mode=%s&version=%s&key=%s';
 
-// var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestConfig, {
-//     lp_version: lpServerConfig.lpVersion,
-//     need_pts: 1
-// });
-
 function UpdatesListener(token, handler) {
     if (handler)
         this._handler = handler;
@@ -40,6 +35,25 @@ UpdatesListener.prototype.isListening = function () {
     return this._listening;
 };
 
+UpdatesListener.prototype.listen = function (callback) {
+    if (!this._handler)
+        return callback(new errors.ArgumentError("No handler specified"));
+
+    getLongPollServer(this._token, (err, res) => {
+        if (err)
+            return callback(err);
+
+        if (res.pts)
+            this._lastPts = res.pts;
+
+        //TODO remove
+        console.log('lp server url:', url);
+
+        listen(res.url, res.ts, this);
+        callback();
+    });
+};
+
 function getLongPollServer(token, callback) {
     var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestConfig['path'], {
         'v': vkApiVersion,
@@ -55,18 +69,6 @@ function getLongPollServer(token, callback) {
         if (err)
             return callback(err);
 
-        callback(undefined, res);
-    });
-}
-
-UpdatesListener.prototype.listen = function (callback) {
-    if (!this._handler)
-        return callback(new errors.ArgumentError("No handler specified"));
-
-    getLongPollServer(this._token, (err, res) => {
-        if (err)
-            return callback(err);
-
         var url = util.format(lpServerUrlPattern,
             res['server'],
             lpServerConfig['wait'],
@@ -74,18 +76,20 @@ UpdatesListener.prototype.listen = function (callback) {
             lpServerConfig['lpVersion'],
             res['key']);
 
-        //TODO replace
-        console.log('lp server url:', url);
+        var data = {
+            ts: res['ts'],
+            url: url
+        };
 
-        setImmediate(listen, url, res['ts'], res['pts'], this);
-        this._listening = true;
+        if (res['pts'])
+            data.pts = res['pts'];
 
-        callback();
+        callback(undefined, data);
     });
-};
+}
 
-
-function listen(urlPattern, ts, pts, self) {
+function listen(urlPattern, ts, self) {
+    self._listening = true;
     var callback = function (err, res) {
         if (err)
             self._listening = false;
@@ -97,6 +101,7 @@ function listen(urlPattern, ts, pts, self) {
 
     function makeReq() {
         var url = urlPattern + '&ts=' + ts;
+
         https.get(url, (res) => {
             var body = '';
 
@@ -114,6 +119,24 @@ function listen(urlPattern, ts, pts, self) {
                     return callback(new errors.ProviderResponseError('Bad response: ' + e.message));
                 }
 
+
+                if (data['failed']) {
+                    var failed = data['failed'];
+                    switch (failed) {
+                        case 1 :
+                            ts = data['ts'];
+                            return setImmediate(makeReq);
+                        case 4:
+                            return callback(new errors.ProviderResponseError('Invalid lp version'));
+                        default:
+                            return getLongPollServer(self._token, (err, res) => {
+                                if (err)
+                                    return callback(err);
+                                //TODO
+
+                            });
+                    }
+                }
                 /*TODO handle
                  {"failed":1,"ts":$new_ts}
                  {"failed":2}
@@ -128,8 +151,10 @@ function listen(urlPattern, ts, pts, self) {
                 }
 
                 ts = data['ts'];
-                pts = data['pts'];
+
                 //TODO handle pts
+                if (data['pts'])
+                    self._lastPts = data['pts'];
 
                 if (!data['updates'] || !(data['updates'] instanceof Array))
                     return callback(new errors.ProviderResponseError("Response doesn't contains 'updates' array"));
@@ -138,6 +163,7 @@ function listen(urlPattern, ts, pts, self) {
 
                 var updates = data['updates'];
                 if (updates.length)
+                //TODO parse updates
                     callback(undefined, updates);
                 //TODO remove
                 else console.log('empty response');

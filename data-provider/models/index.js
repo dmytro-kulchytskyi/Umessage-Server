@@ -1,5 +1,5 @@
 module.exports = {
-    Dialog: require('./Dialog'),
+    Dialog: require('./DialogInfo'),
     Message: require('./Message'),
-    User: require('./User')
+    User: require('./UserInfo')
 };

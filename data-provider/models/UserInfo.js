@@ -1,4 +1,4 @@
-function User(id, username, provider, sex, photo, firstname, lastname) {
+function UserInfo(id, username, provider, sex, photo, firstname, lastname) {
     this.id = id;
     this.username = username;
     this.firstname = firstname;
@@ -8,4 +8,4 @@ function User(id, username, provider, sex, photo, firstname, lastname) {
     this.photo = photo;
 }
 
-module.exports = User;
+module.exports = UserInfo;
