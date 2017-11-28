@@ -1,8 +1,8 @@
-function DialogInfo(provider, id, date, userId, preview, read_state, dialogType, conversationMembers, messages) {
+function DialogInfo(provider, id, date, userId, preview, readState, dialogType, conversationMembers, messages) {
     this.providers = provider;
     this.id = id;
     this.date = date;
-    this.read_state = read_state;
+    this.readState = readState;
     this.preview = preview;
     this.userId = userId;
     this.dialogType = dialogType || DialogInfo.dialogType.dialog;

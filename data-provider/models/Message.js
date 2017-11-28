@@ -1,8 +1,8 @@
-function Message(provider, id, date, userId, title, read_state, body) {
+function Message(provider, id, date, userId, title, readState, body) {
     this.id = id;
     this.date = date;
     this.user = userId;
-    this.read_state = read_state;
+    this.readState = readState;
     this.title = title;
     this.body = body;
     this.provider = provider;

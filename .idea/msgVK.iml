@@ -11,5 +11,6 @@
     <orderEntry type="library" name="node modules" level="application" />
     <orderEntry type="library" name="node-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="node_redis-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="node_modules" level="project" />
   </component>
 </module>
