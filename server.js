@@ -22,11 +22,11 @@ app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/_test/socketsTest.html');
 });
 
-io.on('connection', function (client) {
+io.on('connection', function (socket) {
 	log.debug(`client connected to worker # ${cluster.worker.id}`);
-	client.emit('conn', `connected to ${cluster.worker.id}`);
+	socket.emit('conn', `connected to ${cluster.worker.id}`);
 
-	client.on('message', function (data) {
+	socket.on('message', function (data) {
 		log.debug('MSG: ' + data);
 		io.emit('message', `${data} [From worker ${cluster.worker.id}]`);
 	});

@@ -18,10 +18,10 @@ var requestConfigs = config.get('data-provider:providers:vk:apiMethods');
 
 function getDialogs(params, callback) {
 	var reqParams = {
-		v: vkApiVersion,
-		access_token: params.token,
-		count: params.count,
-		start_message_id: params.startMessageId
+		'v': vkApiVersion,
+		'access_token': params.token,
+		'count': params.count,
+		'start_message_id': params.startMessageId
 	};
 
 	var link = urlBuilder(vkApiLink, requestConfigs.getDialogs.path, reqParams);
@@ -33,11 +33,11 @@ function getDialogs(params, callback) {
 	});
 }
 
-function getMessages(token, requestParams, callback) {
+function getMessages(requestParams, callback) {
 	//TODO
 }
 
-function getUserInfo(userId, callback) {
+function getUserInfo(requestParams, callback) {
 	//TODO
 }
 

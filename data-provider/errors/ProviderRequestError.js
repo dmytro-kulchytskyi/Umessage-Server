@@ -1,4 +1,4 @@
-function ProviderRequestError(errorCode, errorMessage) {
+function ProviderRequestError(errorMessage) {
     Error.call(this, errorMessage) ;
 
     this.message =  errorMessage;

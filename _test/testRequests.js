@@ -1,24 +1,14 @@
-var i = 0;
-function f(data) {
-    var cur = process.memoryUsage().heapUsed;
+var Listener = require('../providers/vk/UpdatesListener');
 
-    if (lastRes > cur)
-        console.log('clean #', ++i);
-
-    lastRes = cur;
-
-    setImmediate(function () {
-        data = data + '1';
-        f(data);
+var listener = new Listener('818193f3875a01a5fb6d7c1318f225afdb1562d8917f57c5d385264faef3066fe9e30442e8c29409537fc',
+    function (err, res) {
+        if (err) console.log(err.message);
+        else console.log(res);
     });
-}
 
-var lastRes = 0;
+listener.listen(function (err) {
+    if (err)
+        console.log("LISTEN ERROR: " + err.message);
+    else console.log('start listening');
+});
 
-setInterval(function () {
-
-}, 100);
-
-f((new Array(1e7)).join('ASD'));
-
-//console.log(!!1)

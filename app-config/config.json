@@ -18,16 +18,17 @@
             "path": "method/messages.getHistory"
           },
           "getUserInfo": {
-            "path": "methods/users.get"
+            "path": "method/users.get"
           },
           "getLPServer": {
-            "path": "methods/messages.getLongPollServer"
+            "path": "method/messages.getLongPollServer",
+            "needPts": "1"
           }
         },
         "lpServerConfiguration": {
           "lpVersion": 2,
-          "mode": true,
-          "wait": 25
+          "mode": 98,
+          "wait": 15
         }
       }
     }
