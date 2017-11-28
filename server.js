@@ -18,18 +18,26 @@ var io = require('socket.io')(server);
 
 io.set('transports', ['websocket']);
 
+//TODO remove
 app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/_test/socketsTest.html');
 });
 
+//TODO add methods to receive data from data provider
+
 io.on('connection', function (socket) {
+
 	log.debug(`client connected to worker # ${cluster.worker.id}`);
+
+    //TODO remove
 	socket.emit('conn', `connected to ${cluster.worker.id}`);
 
 	socket.on('message', function (data) {
 		log.debug('MSG: ' + data);
 		io.emit('message', `${data} [From worker ${cluster.worker.id}]`);
 	});
+
+	//TODO add a subscription to updates-event
 });
 
 server.listen(config.get('appPort'), () => {

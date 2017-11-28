@@ -14,13 +14,14 @@ var vkApiVersion = config.get('data-provider:providers:vk:apiVersion');
 var getLPServerRequestConfig = config.get('data-provider:providers:vk:apiMethods:getLPServer');
 var lpServerConfig = config.get('data-provider:providers:vk:lpServerConfiguration');
 
-var lpServerUrlPattern = 'https://%s?act=a_check&wait=%s&mode=%s&version=%s&key=%s';
+var lpServerUrlPattern = 'https://%s?act=a_check&wait=%s&mode=%s&version=%s';
 
 function UpdatesListener(token, handler) {
     if (handler)
         this._handler = handler;
 
     this._token = token;
+    this._destroyed = false;
 }
 
 UpdatesListener.prototype.setHandler = function (handler) {
@@ -29,6 +30,7 @@ UpdatesListener.prototype.setHandler = function (handler) {
 
 UpdatesListener.prototype.dispose = function () {
     this._listening = false;
+    this._destroyed = true;
 };
 
 UpdatesListener.prototype.isListening = function () {
@@ -39,7 +41,9 @@ UpdatesListener.prototype.listen = function (callback) {
     if (!this._handler)
         return callback(new errors.ArgumentError("No handler specified"));
 
-    getLongPollServer(this._token, (err, res) => {
+    this._listening = true;
+
+    getLongPollServerParams(this._token, (err, res) => {
         if (err)
             return callback(err);
 
@@ -47,15 +51,15 @@ UpdatesListener.prototype.listen = function (callback) {
             this._lastPts = res.pts;
 
         //TODO remove
-        console.log('lp server url:', url);
+        console.log('lp server lpServerUrl:', res.lpServerUrl);
 
-        listen(res.url, res.ts, this);
+        listen(this, res.lpServerUrl, res.key, res.ts);
         callback();
     });
 };
 
-function getLongPollServer(token, callback) {
-    var getLPServerUrl = urlBuilder(vkApiLink, getLPServerRequestConfig['path'], {
+function getLongPollServerParams(token, callback) {
+    var getLPServerRequestUrl = urlBuilder(vkApiLink, getLPServerRequestConfig['path'], {
         'v': vkApiVersion,
         'lp_version': lpServerConfig['lpVersion'],
         'need_pts': getLPServerRequestConfig['needPts'],
@@ -63,22 +67,22 @@ function getLongPollServer(token, callback) {
     });
 
     //TODO remove
-    console.log('getLPServerUrl: ' + getLPServerUrl);
+    console.log('getLPServerUrl: ' + getLPServerRequestUrl);
 
-    apiRequest(getLPServerUrl, (err, res) => {
+    apiRequest(getLPServerRequestUrl, (err, res) => {
         if (err)
             return callback(err);
 
-        var url = util.format(lpServerUrlPattern,
+        var lpServerUrl = util.format(lpServerUrlPattern,
             res['server'],
             lpServerConfig['wait'],
             lpServerConfig['mode'],
-            lpServerConfig['lpVersion'],
-            res['key']);
+            lpServerConfig['lpVersion']);
 
         var data = {
             ts: res['ts'],
-            url: url
+            key: res['key'],
+            lpServerUrl: lpServerUrl
         };
 
         if (res['pts'])
@@ -88,21 +92,22 @@ function getLongPollServer(token, callback) {
     });
 }
 
-function listen(urlPattern, ts, self) {
-    self._listening = true;
-    var callback = function (err, res) {
-        if (err)
-            self._listening = false;
+UpdatesListener.prototype._parseUpdates = function (updates) {
+    //TODO
+    return updates;
+}
 
-        self._handler(err, res);
-    };
+function listen(listener, url, currentKey, currentTs) {
+    if (listener._destroyed) return;
 
-    makeReq();
+    listener._listening = true;
+
+    setImmediate(makeReq);
 
     function makeReq() {
-        var url = urlPattern + '&ts=' + ts;
+        if (!listener._listening) return;
 
-        https.get(url, (res) => {
+        https.get(url + util.format('&key=%s&ts=%s', currentKey, currentTs), (res) => {
             var body = '';
 
             res.on('data', function (d) {
@@ -110,8 +115,6 @@ function listen(urlPattern, ts, self) {
             });
 
             res.on('end', function () {
-                if (!self._listening) return;
-
                 var data;
                 try {
                     data = JSON.parse(body);
@@ -119,42 +122,50 @@ function listen(urlPattern, ts, self) {
                     return callback(new errors.ProviderResponseError('Bad response: ' + e.message));
                 }
 
-
                 if (data['failed']) {
                     var failed = data['failed'];
+
+                    //TODO remove
+                    console.log('failed:', data);
+
                     switch (failed) {
                         case 1 :
-                            ts = data['ts'];
-                            return setImmediate(makeReq);
-                        case 4:
-                            return callback(new errors.ProviderResponseError('Invalid lp version'));
-                        default:
-                            return getLongPollServer(self._token, (err, res) => {
-                                if (err)
-                                    return callback(err);
-                                //TODO
+                            if (!data['ts'])
+                                return callback(new errors.ProviderResponseError("Response doesn't contains 'ts' field"));
 
+                            currentTs = data['ts'];
+                            return setImmediate(makeReq);
+
+                        case 2:
+                            return getLongPollServerParams(listener._token, (err, res) => {
+                                if (err) return callback(err);
+                                //TODO remove
+                                console.log('lp server lpServerUrl:', url);
+
+                                listen(listener, url, res.key, currentTs);
                             });
+
+                        case  3:
+                            return getLongPollServerParams(listener._token, (err, res) => {
+                                if (err) return callback(err);
+                                //TODO remove
+                                console.log('lp server lpServerUrl:', url);
+                                listen(listener, url, res.key, res.ts);
+                            });
+
+                        default:
+                            return callback(new errors.ProviderResponseError('Invalid lp version'));
                     }
                 }
-                /*TODO handle
-                 {"failed":1,"ts":$new_ts}
-                 {"failed":2}
-                 {"failed":3}
-                 {"failed":4,"min_version":0,"max_version":1} */
 
-                if (!data['ts']) {
-                    //TODO remove
-                    console.log('response:\n', data);
-
+                if (!data['ts'])
                     return callback(new errors.ProviderResponseError("Response doesn't contains 'ts' field"));
-                }
 
-                ts = data['ts'];
+                currentTs = data['ts'];
 
                 //TODO handle pts
                 if (data['pts'])
-                    self._lastPts = data['pts'];
+                    listener._lastPts = data['pts'];
 
                 if (!data['updates'] || !(data['updates'] instanceof Array))
                     return callback(new errors.ProviderResponseError("Response doesn't contains 'updates' array"));
@@ -163,18 +174,28 @@ function listen(urlPattern, ts, self) {
 
                 var updates = data['updates'];
                 if (updates.length)
-                //TODO parse updates
-                    callback(undefined, updates);
+                    callback(undefined, listener._parseUpdates(updates));
+
                 //TODO remove
                 else console.log('empty response');
             });
 
         }).on('error', function (e) {
-            if (!self._listening) return;
-
-            callback(new errors.ProviderResponseError(e.message));
+            callback(new errors.ProviderRequestError(e.message));
         });
+
+        function callback(err, res) {
+            if (listener._listening && !listener._destroyed) {
+                if (err)
+                    listener._listening = false;
+
+                //TODO try listen again after req error
+
+                listener._handler(err, res);
+            }
+        }
     }
 }
+
 
 module.exports = UpdatesListener;

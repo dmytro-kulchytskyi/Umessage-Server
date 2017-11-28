@@ -27,8 +27,12 @@
         },
         "lpServerConfiguration": {
           "lpVersion": 2,
-          "mode": 98,
-          "wait": 15
+          "mode": 226,
+          "wait": 20
+        },
+        "updatesListenerConfig": {
+          "retryAfter": 2000,
+          "retryAttempts": 10
         }
       }
     }
