@@ -34,7 +34,7 @@ UpdatesListener.prototype.dispose = function () {
 };
 
 UpdatesListener.prototype.isListening = function () {
-    return this._listening;
+    return (this._listening && !this._destroyed);
 };
 
 UpdatesListener.prototype.listen = function (callback) {
@@ -92,19 +92,14 @@ function getLongPollServerParams(token, callback) {
     });
 }
 
-UpdatesListener.prototype._parseUpdates = function (updates) {
-    //TODO
-    return updates;
-}
-
 function listen(listener, url, currentKey, currentTs) {
     if (listener._destroyed) return;
 
     listener._listening = true;
 
-    setImmediate(makeReq);
+    setImmediate(makeRequest);
 
-    function makeReq() {
+    function makeRequest() {
         if (!listener._listening) return;
 
         https.get(url + util.format('&key=%s&ts=%s', currentKey, currentTs), (res) => {
@@ -115,85 +110,109 @@ function listen(listener, url, currentKey, currentTs) {
             });
 
             res.on('end', function () {
+
                 var data;
                 try {
                     data = JSON.parse(body);
                 } catch (e) {
-                    return callback(new errors.ProviderResponseError('Bad response: ' + e.message));
+                    return onResult(new errors.ProviderResponseError('Bad response: ' + e.message));
                 }
 
-                if (data['failed']) {
-                    var failed = data['failed'];
-
-                    //TODO remove
-                    console.log('failed:', data);
-
-                    switch (failed) {
-                        case 1 :
-                            if (!data['ts'])
-                                return callback(new errors.ProviderResponseError("Response doesn't contains 'ts' field"));
-
-                            currentTs = data['ts'];
-                            return setImmediate(makeReq);
-
-                        case 2:
-                            return getLongPollServerParams(listener._token, (err, res) => {
-                                if (err) return callback(err);
-                                //TODO remove
-                                console.log('lp server lpServerUrl:', url);
-
-                                listen(listener, url, res.key, currentTs);
-                            });
-
-                        case  3:
-                            return getLongPollServerParams(listener._token, (err, res) => {
-                                if (err) return callback(err);
-                                //TODO remove
-                                console.log('lp server lpServerUrl:', url);
-                                listen(listener, url, res.key, res.ts);
-                            });
-
-                        default:
-                            return callback(new errors.ProviderResponseError('Invalid lp version'));
-                    }
-                }
-
-                if (!data['ts'])
-                    return callback(new errors.ProviderResponseError("Response doesn't contains 'ts' field"));
-
-                currentTs = data['ts'];
-
-                //TODO handle pts
-                if (data['pts'])
-                    listener._lastPts = data['pts'];
-
-                if (!data['updates'] || !(data['updates'] instanceof Array))
-                    return callback(new errors.ProviderResponseError("Response doesn't contains 'updates' array"));
-
-                setImmediate(makeReq);
-
-                var updates = data['updates'];
-                if (updates.length)
-                    callback(undefined, listener._parseUpdates(updates));
-
-                //TODO remove
-                else console.log('empty response');
+                handlerErrors(data, processResponse);
             });
 
         }).on('error', function (e) {
-            callback(new errors.ProviderRequestError(e.message));
+            onResult(new errors.ProviderRequestError(e.message));
         });
+    }
 
-        function callback(err, res) {
-            if (listener._listening && !listener._destroyed) {
-                if (err)
-                    listener._listening = false;
+    function handlerErrors(response, callback) {
+        if (response['failed']) {
+            var failed = response['failed'];
 
-                //TODO try listen again after req error
+            //TODO remove
+            console.log('failed:', response);
 
-                listener._handler(err, res);
+            switch (failed) {
+                case 1 :
+                    if (!response['ts'])
+                        callback(new errors.ProviderResponseError("Response doesn't contains 'ts' field"));
+                    else {
+                        currentTs = response['ts'];
+                        setImmediate(makeRequest);
+                    }
+                    break;
+                case 2:
+                    getLongPollServerParams(listener._token, (err, res) => {
+                        if (err) return callback(err);
+
+                        //TODO remove
+                        console.log('lp server lpServerUrl:', url);
+                        listen(listener, url, res.key, currentTs);
+                    });
+                    break;
+                case  3:
+                    getLongPollServerParams(listener._token, (err, res) => {
+                        if (err) return callback(err);
+
+                        //TODO remove
+                        console.log('lp server lpServerUrl:', url);
+                        listen(listener, url, res.key, res.ts);
+                    });
+                    break;
+
+                default:
+                    callback(new errors.ProviderResponseError('Invalid lp version'));
+                    break;
             }
         }
+
+        else if (!response['ts'])
+            callback(new errors.ProviderResponseError("Response doesn't contains 'ts' field"));
+
+        else if (!response['updates'] || !(response['updates'] instanceof Array))
+            callback(new errors.ProviderResponseError("Response doesn't contains 'updates' array"));
+
+        else
+            callback(undefined, response);
+    }
+
+
+    function processResponse(err, res) {
+        if (err)
+            return onResult(err);
+
+        currentTs = res['ts'];
+
+        //TODO handle pts
+        if (res['pts'])
+            listener._lastPts = res['pts'];
+
+
+        setImmediate(makeRequest);
+
+        var updates = res['updates'];
+        if (updates.length)
+            onResult(undefined, parseUpdates(updates));
+
+        //TODO remove
+        else console.log('empty response');
+    }
+
+    function onResult(err, res) {
+        if (listener.isListening()) {
+            if (err)
+                listener._listening = false;
+
+            //TODO try listen again after req error
+
+            listener._handler(err, res);
+        }
+    }
+
+    function parseUpdates(updates) {
+        //TODO
+        return updates;
     }
 }
 
